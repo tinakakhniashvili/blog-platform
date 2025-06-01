@@ -1,0 +1,22 @@
+version: "3"
+services:
+  frontend:
+    build: .
+    ports:
+      - "3001:5000"
+    depends_on:
+      - user-service
+      - post-service
+      - comment-service
+  user-service:
+    build: ./user-service
+    ports:
+      - "3000:3000"
+  post-service:
+    build: ./post-service
+    ports:
+      - "5000:5000"
+  comment-service:
+    build: ./comment-service
+    ports:
+      - "8080:8080"

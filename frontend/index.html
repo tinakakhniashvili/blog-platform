@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blog Frontend</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@17/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      input,
+      textarea {
+        display: block;
+        margin: 10px 0;
+        padding: 8px;
+        width: 100%;
+        max-width: 300px;
+      }
+      button {
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      const API_URLS = {
+        userService: "http://user-service:3000",
+        postService: "http://post-service:5000",
+        commentService: "http://comment-service:8080",
+      };
+
+      const api = {
+        login: async (email, password) => {
+          const response = await axios.post(`${API_URLS.userService}/login`, {
+            email,
+            password,
+          });
+          return response.data.token;
+        },
+        createPost: async (title, content, token) => {
+          await axios.post(
+            `${API_URLS.postService}/posts`,
+            { title, content },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+        },
+        getPosts: async () => {
+          const response = await axios.get(`${API_URLS.postService}/posts`);
+          return response.data;
+        },
+        addComment: async (postId, comment, token) => {
+          await axios.post(
+            `${API_URLS.commentService}/comments`,
+            { postId, comment },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+        },
+        getComments: async (postId) => {
+          const response = await axios.get(
+            `${API_URLS.commentService}/comments?postId=${postId}`
+          );
+          return response.data;
+        },
+      };
+
+      const Login = ({ setToken }) => {
+        const [email, setEmail] = useState("");
+        const [password, setPassword] = useState("");
+
+        const handleLogin = async () => {
+          try {
+            const token = await api.login(email, password);
+            setToken(token);
+          } catch (error) {
+            alert("Login failed!");
+          }
+        };
+
+        return (
+          <div>
+            <h2>Login</h2>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+            />
+            <button onClick={handleLogin}>Login</button>
+          </div>
+        );
+      };
+
+      const Posts = ({ token }) => {
+        const [posts, setPosts] = useState([]);
+        const [title, setTitle] = useState("");
+        const [content, setContent] = useState("");
+
+        useEffect(() => {
+          const fetchPosts = async () => {
+            const data = await api.getPosts();
+            setPosts(data);
+          };
+          fetchPosts();
+        }, []);
+
+        const handleCreatePost = async () => {
+          await api.createPost(title, content, token);
+          setTitle("");
+          setContent("");
+          const data = await api.getPosts();
+          setPosts(data);
+        };
+
+        return (
+          <div>
+            <h2>Posts</h2>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title"
+            />
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Content"
+            ></textarea>
+            <button onClick={handleCreatePost}>Create Post</button>
+            <ul>
+              {posts.map((post) => (
+                <li key={post.id}>
+                  <strong>{post.title}</strong>: {post.content}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      };
+
+      const App = () => {
+        const [token, setToken] = useState(null);
+
+        return (
+          <div>
+            {token ? <Posts token={token} /> : <Login setToken={setToken} />}
+          </div>
+        );
+      };
+
+      ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+  </body>
+</html>
