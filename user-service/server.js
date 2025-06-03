@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.json());
 
-mongoose.connect("mongodb://mongo:27017/users", {
+mongoose.connect("mongodb://localhost:27017/blog", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });

@@ -1,15 +1,58 @@
 version: "3.8"
 
 services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3001:5000"
+    depends_on:
+      - user-service
+      - post-service
+      - comment-service
+
   user-service:
     build:
-      context: ./user-temp
+      context: ./user-service
     ports:
       - "3000:3000"
     depends_on:
       - mongo
 
+  post-service:
+    build:
+      context: ./post-service
+    ports:
+      - "5050:5000"
+    depends_on:
+      - postgres
+
+  comment-service:
+    build:
+      context: ./comment-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+
   mongo:
     image: mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: posts
+    ports:
+      - "5432:5432"
+
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: comments
+    ports:
+      - "3306:3306"
